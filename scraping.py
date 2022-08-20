@@ -18,6 +18,7 @@ def scrape_all():
       "news_paragraph": news_paragraph,
       "featured_image": featured_image(browser),
       "facts": mars_facts(),
+      "hemispheres" : get_hemispheres(browser),
       "last_modified": dt.datetime.now()
     }
 
@@ -50,7 +51,7 @@ def mars_news(browser):
 
 def featured_image(browser):
     # Visit URL
-    url = 'https://data-class-jpl-space.s3.amazonaws.com/JPL_Space/index.html'
+    url = 'https://spaceimages-mars.com'
     browser.visit(url)
 
     # Find and click the full image button
@@ -70,7 +71,7 @@ def featured_image(browser):
         return None
 
     # Use the base URL to create an absolute URL
-    img_url = f'https://data-class-jpl-space.s3.amazonaws.com/JPL_Space/{img_url_rel}'
+    img_url = f'https://spaceimages-mars.com/{img_url_rel}'
    
     return img_url
 
@@ -80,7 +81,7 @@ def mars_facts():
      # Add try/except for error handling
     try:
         # Use 'read_html' to scrape the facts table into a dataframe
-        df = pd.read_html('https://data-class-mars-facts.s3.amazonaws.com/Mars_Facts/index.html')[0]
+        df = pd.read_html('https://galaxyfacts-mars.com')[0]
 
     except BaseException:
         return None
@@ -91,11 +92,24 @@ def mars_facts():
     
     # Convert dataframe into HTML format, add bootstrap
     return df.to_html(classes="table table-striped")
+    
+def get_hemispheres(browser):
+    url = 'https://marshemispheres.com/'
+    browser.visit(url)
+    hemisphere_image_urls = []
+    for result in range(4):
+        hemispheres = {}
+        browser.find_by_css('a.product-item img')[result].click()
+        hemispheres['img_url'] = browser.find_by_text('Sample')['href']
+        hemispheres['title'] = browser.find_by_css('h2').text
+        hemisphere_image_urls.append(hemispheres)
+        browser.back()
+
+    return hemisphere_image_urls
 
 if __name__ == "__main__":
 
     # If running as script, print scraped data
     print(scrape_all())
-
 
 
